@@ -1,0 +1,20 @@
+{
+  "extends": [
+    "./node_modules/eslint-config-xenia/.eslintrc.json",
+    "plugin:flowtype/recommended"
+  ],
+  "env": {
+    "jest": true
+  },
+  "plugins": [
+    "flowtype"
+  ],
+  "overrides": [
+    {
+      "files": ["*.test.js"],
+      "env": {
+        "jest": true
+      }
+    }
+  ]
+}
