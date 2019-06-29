@@ -21,6 +21,7 @@ const channelTypeOrder = {
     [General.PRIVATE_CHANNEL]: 1,
     [General.DM_CHANNEL]: 2,
     [General.GM_CHANNEL]: 2,
+    [General.APP_CHANNEL]: 3,
 };
 
 /**

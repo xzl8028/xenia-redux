@@ -5,7 +5,7 @@
 import type {IDMappedObjects, UserIDMappedObjects, RelationOneToMany, RelationOneToOne} from './utilities';
 import type {Team} from './teams';
 
-export type ChannelType = 'O' | 'P' | 'D' | 'G';
+export type ChannelType = 'O' | 'P' | 'D' | 'G' | 'A';
 
 export type ChannelStats = {|
     channel_id: string,

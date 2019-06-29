@@ -960,6 +960,47 @@ export function getGroupOrDirectChannelVisibility(state: GlobalState, channelId:
     );
 }
 
+// App Channels
+export const getAppChannels: (GlobalState) => Array<Channel> = createSelector(
+    getCurrentUser,
+    getAllChannels,
+    getMyChannelMemberships,
+    getChannelIdsForCurrentTeam,
+    (currentUser, channels, myMembers, teamChannelIds) => {
+        if (!currentUser) {
+            return [];
+        }
+
+        const appChannels = teamChannelIds.filter((id) => {
+            if (!myMembers[id]) {
+                return false;
+            }
+            const channel = channels[id];
+            return teamChannelIds.includes(id) && channel.type === General.APP_CHANNEL;
+        }).map((id) => channels[id]);
+
+        return appChannels;
+    },
+);
+
+export const getAppChannelIds: (GlobalState, Channel, boolean, boolean, SortingType) => Array<string> = createIdsSelector(
+    getAppChannels,
+    getCurrentUser,
+    getMyChannelMemberships,
+    getLastPostPerChannel,
+    (state, lastUnreadChannel, unreadsAtTop, favoritesAtTop, sorting: SortingType = 'alpha') => sorting,
+    mapAndSortChannelIds,
+);
+
+export const getSortedAppChannelIds: (GlobalState, Channel, boolean, boolean, SortingType) => Array<string> = createIdsSelector(
+    getUnreadChannelIds,
+    getFavoritesPreferences,
+    (state, lastUnreadChannel, unreadsAtTop, favoritesAtTop, sorting: SortingType = 'alpha') => getAppChannelIds(state, lastUnreadChannel, unreadsAtTop, favoritesAtTop, sorting),
+    (state, lastUnreadChannel, unreadsAtTop = true) => unreadsAtTop,
+    (state, lastUnreadChannel, unreadsAtTop, favoritesAtTop = true) => favoritesAtTop,
+    filterChannels,
+);
+
 // Filters post IDs by the given condition.
 // The condition function receives as parameters the associated channel object and the post object.
 export const filterPostIds = (condition: (Channel, Post) => boolean) => {
@@ -1097,6 +1138,18 @@ export const getOrderedChannelIds = (state: GlobalState, lastUnreadChannel: Chan
                 sorting,
             ),
         });
+
+        channels.push({
+            type: 'app',
+            name: 'APPS',
+            items: getSortedAppChannelIds(
+                state,
+                lastUnreadChannel,
+                unreadsAtTop,
+                favoritesAtTop,
+                sorting,
+            ),
+        });
     } else {
         // Combine all channel types
         let type = 'alpha';
@@ -1190,6 +1243,16 @@ export const getSortedDirectChannelWithUnreadsIds: (GlobalState, Channel, boolea
     (state, lastUnreadChannel, unreadsAtTop, favoritesAtTop = true) => favoritesAtTop,
     (unreadChannelIds, favoritePreferences, directChannelIds, favoritesAtTop) => {
         return filterChannels(unreadChannelIds, favoritePreferences, directChannelIds, false, favoritesAtTop);
+    },
+);
+
+export const getSortedAppChannelWithUnreadsIds: (GlobalState, Channel, boolean, boolean, SortingType) => Array<string> = createIdsSelector(
+    getUnreadChannelIds,
+    getFavoritesPreferences,
+    getAppChannelIds,
+    (state, lastUnreadChannel, unreadsAtTop, favoritesAtTop = true) => favoritesAtTop,
+    (unreadChannelIds, favoritePreferences, appChannelIds, favoritesAtTop) => {
+        return filterChannels(unreadChannelIds, favoritePreferences, appChannelIds, false, favoritesAtTop);
     },
 );
 

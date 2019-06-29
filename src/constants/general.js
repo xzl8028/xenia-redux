@@ -59,6 +59,7 @@ export default {
     OPEN_CHANNEL: 'O',
     PRIVATE_CHANNEL: 'P',
     GM_CHANNEL: 'G',
+    APP_CHANNEL: 'A',
 
     PUSH_NOTIFY_APPLE_REACT_NATIVE: 'apple_rn',
     PUSH_NOTIFY_ANDROID_REACT_NATIVE: 'android_rn',
