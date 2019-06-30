@@ -983,23 +983,32 @@ export const getAppChannels: (GlobalState) => Array<Channel> = createSelector(
     },
 );
 
-export const getAppChannelIds: (GlobalState, Channel, boolean, boolean, SortingType) => Array<string> = createIdsSelector(
+export const getAppChannelIds: (GlobalState, Channel, SortingType) => Array<string> = createIdsSelector(
     getAppChannels,
     getCurrentUser,
     getMyChannelMemberships,
     getLastPostPerChannel,
-    (state, lastUnreadChannel, unreadsAtTop, favoritesAtTop, sorting: SortingType = 'alpha') => sorting,
+    (state, channels, sorting: SortingType = 'alpha') => sorting,
     mapAndSortChannelIds,
 );
 
-export const getSortedAppChannelIds: (GlobalState, Channel, boolean, boolean, SortingType) => Array<string> = createIdsSelector(
-    getUnreadChannelIds,
-    getFavoritesPreferences,
-    (state, lastUnreadChannel, unreadsAtTop, favoritesAtTop, sorting: SortingType = 'alpha') => getAppChannelIds(state, lastUnreadChannel, unreadsAtTop, favoritesAtTop, sorting),
-    (state, lastUnreadChannel, unreadsAtTop = true) => unreadsAtTop,
-    (state, lastUnreadChannel, unreadsAtTop, favoritesAtTop = true) => favoritesAtTop,
-    filterChannels,
+// export const getSortedAppChannelIds: (GlobalState, Channel, SortingType) => Array<string> = getAppChannelIds(GlobalState, Channel, sorting);
+
+export const getSortedAppChannelIds: (GlobalState, Channel, SortingType) => Array<string> = createIdsSelector(
+
+    // getUnreadChannelIds,
+    // getFavoritesPreferences,
+    // (state, lastUnreadChannel, unreadsAtTop, favoritesAtTop, sorting: SortingType = 'alpha') => getAppChannelIds(state, lastUnreadChannel, unreadsAtTop, favoritesAtTop, sorting),
+    // (state, lastUnreadChannel, unreadsAtTop = true) => false,
+    // (state, lastUnreadChannel, unreadsAtTop, favoritesAtTop = true) => false,
+
+    (state, channels, sorting: SortingType = 'alpha') => getAppChannelIds(state, channels, sorting),
+    (channelIds1) => channelIds1,
 );
+
+// export const getSortedAppChannelIds: (GlobalState, Channel, SortingType) => Array<string> = createIdsSelector(
+//     (state, appChannels, sorting: SortingType = 'alpha') => getAppChannelIds(state, appChannels, sorting),
+// );
 
 // Filters post IDs by the given condition.
 // The condition function receives as parameters the associated channel object and the post object.
@@ -1051,15 +1060,18 @@ const getAllActiveChannels = createSelector(
     getPublicChannels,
     getPrivateChannels,
     getDirectChannels,
+    getAppChannels,
     (
         publicChannels,
         privateChannels,
         directChannels,
+        appChannels,
     ) => {
         const allChannels = [
             ...publicChannels,
             ...privateChannels,
             ...directChannels,
+            ...appChannels,
         ];
 
         return allChannels;
@@ -1145,8 +1157,6 @@ export const getOrderedChannelIds = (state: GlobalState, lastUnreadChannel: Chan
             items: getSortedAppChannelIds(
                 state,
                 lastUnreadChannel,
-                unreadsAtTop,
-                favoritesAtTop,
                 sorting,
             ),
         });

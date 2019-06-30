@@ -45,11 +45,14 @@ export function buildDisplayableChannelList(usersState: UsersState, allChannels:
     const notFavoriteChannels = buildNotFavoriteChannels(channels, myPreferences);
     const directAndGroupChannels = buildDirectAndGroupChannels(notFavoriteChannels, myMembers, config, myPreferences, currentUserId, profiles, lastPosts);
 
+    // const appChannels = buildAppChannels(channels, locale);
+
     return {
         favoriteChannels,
         publicChannels: (notFavoriteChannels.filter(isOpenChannel): Array<Channel>),
         privateChannels: (notFavoriteChannels.filter(isPrivateChannel): Array<Channel>),
         directAndGroupChannels,
+        appChannels: (channels.filter(isAppChannel): Array<Channel>),
     };
 }
 
@@ -65,12 +68,15 @@ export function buildDisplayableChannelListWithUnreadSection(usersState: UsersSt
     const notFavoriteChannels = buildNotFavoriteChannels(notUnreadChannels, myPreferences);
     const directAndGroupChannels = buildDirectAndGroupChannels(notFavoriteChannels, myMembers, config, myPreferences, currentUserId, profiles, lastPosts);
 
+    // const appChannels = buildAppChannels(channels, locale);
+
     return {
         unreadChannels,
         favoriteChannels,
         publicChannels: (notFavoriteChannels.filter(isOpenChannel): Array<Channel>),
         privateChannels: (notFavoriteChannels.filter(isPrivateChannel): Array<Channel>),
         directAndGroupChannels,
+        appChannels: (channels.filter(isAppChannel): Array<Channel>),
     };
 }
 
@@ -219,6 +225,10 @@ export function isGroupOrDirectChannelVisible(channel: Channel, memberships: Rel
     }
     const otherUserId = getUserIdFromChannelName(currentUserId, channel.name);
     return isDirectChannelVisible(users[otherUserId] || otherUserId, config, myPreferences, channel, lastPost, isUnreadChannel(memberships, channel));
+}
+
+export function isAppChannel(channel: Channel): boolean {
+    return channel.type === General.APP_CHANNEL;
 }
 
 export function showCreateOption(state: GlobalState, config: Object, license: Object, teamId: string, channelType: ChannelType, isAdmin: boolean, isSystemAdmin: boolean): boolean {
@@ -624,6 +634,11 @@ function buildUnreadChannels(channels, members, locale) {
     return channels.filter(channelHasUnreadMessages.bind(null, members)).
         sort(sortChannelsByDisplayName.bind(null, locale));
 }
+
+// function buildAppChannels(channels, locale) {
+//     return channels.filter((channel) => isAppChannel(channel)).
+//         sort(sortChannelsByDisplayName.bind(null, locale));
+// }
 
 function getUserLocale(userId, profiles) {
     let locale = General.DEFAULT_LOCALE;
