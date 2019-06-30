@@ -380,7 +380,7 @@ export const getArchivedChannels: (GlobalState) => Array<Channel> = createSelect
     }
 );
 
-export const getChannelsByCategory: (GlobalState) => {favoriteChannels: Array<Channel>, publicChannels: Array<Channel>, privateChannels: Array<Channel>, directAndGroupChannels: Array<Channel>} = createSelector(
+export const getChannelsByCategory: (GlobalState) => {favoriteChannels: Array<Channel>, publicChannels: Array<Channel>, privateChannels: Array<Channel>, directAndGroupChannels: Array<Channel>, appChannels: Array<Channel>} = createSelector(
     getCurrentChannelId,
     getMyChannels,
     getMyChannelMemberships,
@@ -543,7 +543,8 @@ export const canManageChannelMembers: (GlobalState) => boolean = createSelector(
     hasNewPermissions,
     (state: GlobalState): boolean => haveICurrentChannelPermission(state, {permission: Permissions.MANAGE_PRIVATE_CHANNEL_MEMBERS}),
     (state: GlobalState): boolean => haveICurrentChannelPermission(state, {permission: Permissions.MANAGE_PUBLIC_CHANNEL_MEMBERS}),
-    (channel: Channel, user: UserProfile, teamMembership: TeamMembership, channelMembership: ?ChannelMembership, config: Object, license: Object, newPermissions: boolean, managePrivateMembers: boolean, managePublicMembers: boolean): boolean => {
+    (state: GlobalState): boolean => haveICurrentChannelPermission(state, {permission: Permissions.MANAGE_APP_CHANNEL_MEMBERS}),
+    (channel: Channel, user: UserProfile, teamMembership: TeamMembership, channelMembership: ?ChannelMembership, config: Object, license: Object, newPermissions: boolean, managePrivateMembers: boolean, managePublicMembers: boolean, manageAppMembers: boolean): boolean => {
         if (!channel) {
             return false;
         }
@@ -563,6 +564,8 @@ export const canManageChannelMembers: (GlobalState) => boolean = createSelector(
                 return managePublicMembers;
             } else if (channel.type === General.PRIVATE_CHANNEL) {
                 return managePrivateMembers;
+            } else if (channel.type === General.APP_CHANNEL) {
+                return manageAppMembers;
             }
             return true;
         }
@@ -983,28 +986,34 @@ export const getAppChannels: (GlobalState) => Array<Channel> = createSelector(
     },
 );
 
-export const getAppChannelIds: (GlobalState, Channel, SortingType) => Array<string> = createIdsSelector(
+export const getAppChannelIds: (GlobalState, Channel) => Array<string> = createIdsSelector(
     getAppChannels,
     getCurrentUser,
-    getMyChannelMemberships,
-    getLastPostPerChannel,
-    (state, channels, sorting: SortingType = 'alpha') => sorting,
-    mapAndSortChannelIds,
+    (appChannels, currentUser) => {
+        const locale = currentUser.locale || General.DEFAULT_LOCALE;
+        return appChannels.sort(sortChannelsByDisplayName.bind(null, locale)).
+            map((channel) => channel.id);
+    }
 );
 
-// export const getSortedAppChannelIds: (GlobalState, Channel, SortingType) => Array<string> = getAppChannelIds(GlobalState, Channel, sorting);
-
-export const getSortedAppChannelIds: (GlobalState, Channel, SortingType) => Array<string> = createIdsSelector(
-
-    // getUnreadChannelIds,
-    // getFavoritesPreferences,
-    // (state, lastUnreadChannel, unreadsAtTop, favoritesAtTop, sorting: SortingType = 'alpha') => getAppChannelIds(state, lastUnreadChannel, unreadsAtTop, favoritesAtTop, sorting),
-    // (state, lastUnreadChannel, unreadsAtTop = true) => false,
-    // (state, lastUnreadChannel, unreadsAtTop, favoritesAtTop = true) => false,
-
-    (state, channels, sorting: SortingType = 'alpha') => getAppChannelIds(state, channels, sorting),
-    (channelIds1) => channelIds1,
+export const getSortedAppChannelIds: (GlobalState, Channel) => Array<string> = createIdsSelector(
+    getAppChannelIds,
+    (channelIds) => channelIds,
 );
+
+// export const getAppChannelIds: (GlobalState, Channel, SortingType) => Array<string> = createIdsSelector(
+//     getAppChannels,
+//     getCurrentUser,
+//     getMyChannelMemberships,
+//     getLastPostPerChannel,
+//     (state, channels, sorting: SortingType = 'alpha') => sorting,
+//     mapAndSortChannelIds,
+// );
+
+// export const getSortedAppChannelIds: (GlobalState, Channel, SortingType) => Array<string> = createIdsSelector(
+//     (state, channels, sorting: SortingType = 'alpha') => getAppChannelIds(state, channels, sorting),
+//     (channelIds) => channelIds,
+// );
 
 // export const getSortedAppChannelIds: (GlobalState, Channel, SortingType) => Array<string> = createIdsSelector(
 //     (state, appChannels, sorting: SortingType = 'alpha') => getAppChannelIds(state, appChannels, sorting),
@@ -1157,7 +1166,6 @@ export const getOrderedChannelIds = (state: GlobalState, lastUnreadChannel: Chan
             items: getSortedAppChannelIds(
                 state,
                 lastUnreadChannel,
-                sorting,
             ),
         });
     } else {
